@@ -45,7 +45,8 @@ services:
       - ./themes/CustomThemeBaseV2:/var/www/src/themes/CustomThemeBaseV2
       - ./plugins/SamplePlugin:/var/www/src/plugins/SamplePlugin
       - ./plugins/MultipleLocalAuth:/var/www/src/plugins/MultipleLocalAuth
-      
+    entrypoint: ["/entrypoint.sh"]
+    command: ["php-fpm"]
     links:
       - db
       - redis
