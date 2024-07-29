@@ -82,6 +82,52 @@ mapacultural/dev/$ sudo ./start.sh
 
 acesse no seu navegador http://localhost/
 
+### Depurando VSCODE
+
+1. Crie o arquivo xdebug.ini dentro do diretório ***dev*** com conteúdo:
+
+```[xdebug]
+zend_extension=xdebug
+xdebug.mode=develop,debug
+xdebug.start_with_request = yes
+xdebug.client_host = "host.docker.internal"
+xdebug.idekey="VSCODE"
+xdebug.log=/tmp/xdebug_remote.log
+```
+
+2. Adicione a instrução de mapeanmento em volumes do services mapas no arquivo ***docker-compose.yml*** 
+
+```- ./xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini```
+
+3. Adicione a linha a seguir dentro do services mapas
+
+```
+extra_hosts:
+      - "host.docker.internal:host-gateway
+```
+
+4. Instale a extensão ***PHP Debug*** e configure o ***launch.json***:
+
+```
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Listen for Xdebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9003,
+            "pathMappings": {                
+                "/var/www/src/themes/CustomThemeBaseV2": "${workspaceFolder}/themes/CustomThemeBaseV2",
+                "/var/www/src/plugins/MultipleLocalAuth": "${workspaceFolder}/plugins/MultipleLocalAuth",                
+            },
+            "log": true
+        }
+    ]
+}
+
+```
+
 ### psysh
 Este ambiente roda com o built-in web server do PHP, o que possibilita que seja utilizado o [PsySH](https://psysh.org/]), um console interativo para debug e desenvolvimento. 
 

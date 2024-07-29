@@ -1,4 +1,3 @@
-version: '2'
 services:
   mapas:
     build:
@@ -19,9 +18,13 @@ services:
       - ../docker/common/config.d:/var/www/config/common.d
       - ./config.d:/var/www/config/local.d
 
+      # Mapear xdebug.ini
+      - ./xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+
       # themes and plugins
+      - ../themes/CustomThemeBaseV2:/var/www/src/themes/CustomThemeBaseV2
       - ../plugins/SamplePlugin:/var/www/src/plugins/SamplePlugin
-      - ../plugins/MultipleLocalAuth:/var/www/src/plugins/MultipleLocalAuth
+      - ../plugins/MultipleLocalAuth:/var/www/src/plugins/MultipleLocalAuth      
 
     environment:
       - PENDING_PCACHE_RECREATION_INTERVAL=10
@@ -32,6 +35,9 @@ services:
       - MAILER_TRANSPORT=smtp://mailhog:1025
       - MAILER_FROM=sysadmin@localhost
 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     depends_on:
       - db
       - redis
@@ -39,7 +45,6 @@ services:
   
     stdin_open: true
     tty: true
-
 
   redis:
     image: redis:6

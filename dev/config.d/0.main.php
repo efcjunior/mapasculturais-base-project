@@ -1,5 +1,12 @@
 <?php
 $_ENV['APP_MODE'] = 'development';
+
+/**credenciais auth google */
+$_ENV['AUTH_GOOGLE_CLIENT_ID']='';
+$_ENV['AUTH_GOOGLE_CLIENT_SECRET']='';
+$_ENV['AUTH_GOOGLE_SCOPE']='email profile';
+$_ENV['AUTH_GOOGLE_REDIRECT_ID']='';
+
 $__process_assets = false;
 
 return [
@@ -30,4 +37,6 @@ return [
 
         'publishFolderCommand' => 'cp -R {IN} {PUBLISH_PATH}{FILENAME}'
     ]),
+
+    'themes.active' => 'CustomThemeBaseV2',
 ];

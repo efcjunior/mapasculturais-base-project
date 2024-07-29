@@ -1,4 +1,3 @@
-version: '3'
 services:
   nginx:
     image: nginx:latest
@@ -29,7 +28,7 @@ services:
       - .env
     build:
       context: ./
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile    
     restart: unless-stopped
     volumes:
       - ./.env:/.env
@@ -41,6 +40,12 @@ services:
       - ./docker-data/logs:/var/www/var/logs
 
       - ./docker/production/config.d:/var/www/config/prod.d
+
+      # Adicione os volumes para themes e plugins
+      - ./themes/CustomThemeBaseV2:/var/www/src/themes/CustomThemeBaseV2
+      - ./plugins/SamplePlugin:/var/www/src/plugins/SamplePlugin
+      - ./plugins/MultipleLocalAuth:/var/www/src/plugins/MultipleLocalAuth
+      
     links:
       - db
       - redis
