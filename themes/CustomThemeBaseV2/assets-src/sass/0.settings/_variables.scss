@@ -16,7 +16,7 @@ $lightness-300: 25% !default;
 $lightness-700: 25% !default;
 
 // Brand colors
-$primary-500: #083b5d !default;
+$primary-500: #004080 !default;
 $primary-300: lighten($primary-500, $lightness-300) !default;
 $primary-700: darken($primary-500, $lightness-700) !default;
 
