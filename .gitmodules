@@ -1,4 +1,4 @@
 [submodule "plugins/MultipleLocalAuth"]
 	path = plugins/MultipleLocalAuth
 	url = https://github.com/mapasculturais/plugin-MultipleLocalAuth.git
-	branch = feature/login-basev2
+	branch = feature/BaseV2
