@@ -1,10 +1,9 @@
 services:
   nginx:
-    image: nginx:latest
+    image: nginx:1.27-alpine3.19
     restart: unless-stopped
     volumes:
       - /dev/null:/var/www/html/index.php
-
       - ./docker-data/public-files:/var/www/html/files
       - ./docker-data/assets:/var/www/html/assets
 
@@ -45,8 +44,8 @@ services:
       - ./themes/CustomThemeBaseV2:/var/www/src/themes/CustomThemeBaseV2
       - ./plugins/SamplePlugin:/var/www/src/plugins/SamplePlugin
       - ./plugins/MultipleLocalAuth:/var/www/src/plugins/MultipleLocalAuth
-    entrypoint: ["/entrypoint.sh"]
-    command: ["php-fpm"]
+    #entrypoint: ["/entrypoint.sh"]
+    #command: ["php-fpm"]
     links:
       - db
       - redis

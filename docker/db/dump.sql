@@ -16,39 +16,24 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
---
--- Name: tiger; Type: SCHEMA; Schema: -; Owner: mapas
---
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'tiger') THEN
+        CREATE SCHEMA tiger;
+        ALTER SCHEMA tiger OWNER TO mapas;
+    END IF;
 
-CREATE SCHEMA tiger;
+    IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'tiger_data') THEN
+        CREATE SCHEMA tiger_data;
+        ALTER SCHEMA tiger_data OWNER TO mapas;
+    END IF;
 
-
-ALTER SCHEMA tiger OWNER TO mapas;
-
---
--- Name: tiger_data; Type: SCHEMA; Schema: -; Owner: mapas
---
-
-CREATE SCHEMA tiger_data;
-
-
-ALTER SCHEMA tiger_data OWNER TO mapas;
-
---
--- Name: topology; Type: SCHEMA; Schema: -; Owner: mapas
---
-
-CREATE SCHEMA topology;
-
-
-ALTER SCHEMA topology OWNER TO mapas;
-
---
--- Name: SCHEMA topology; Type: COMMENT; Schema: -; Owner: mapas
---
-
-COMMENT ON SCHEMA topology IS 'PostGIS Topology schema';
-
+    IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'topology') THEN
+        CREATE SCHEMA topology;
+        ALTER SCHEMA topology OWNER TO mapas;
+        COMMENT ON SCHEMA topology IS 'PostGIS Topology schema';
+    END IF;
+END $$;
 
 --
 -- Name: fuzzystrmatch; Type: EXTENSION; Schema: -; Owner: -
