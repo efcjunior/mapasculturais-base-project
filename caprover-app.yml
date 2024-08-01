@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  mapasculturais:
+    image: efcjunior/mapasculturais:prefeitura-triunfo
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - APP_MODE=$$cap_app_mode
+      - LOG_LEVEL=$$cap_log_level
+      - LOG_ENABLED=$$cap_log_enabled
+      - CEP_TOKEN=$$cap_cep_token
+      - MAILER_TRANSPORT=$$cap_mailer_transport
+      - MAILER_FROM=$$cap_mailer_from
+      - MAILER_ALWAYSTO=$$cap_mailer_alwaysto
+      - DB_HOST=db
+      - DB_NAME=$$cap_postgres_db
+      - DB_USER=$$cap_postgres_user
+      - DB_PASS=$$cap_postgres_password
+      - GOOGLE_RECAPTCHA_SITEKEY=$$cap_google_recaptcha_sitekey
+      - GOOGLE_RECAPTCHA_SECRET=$$cap_google_recaptcha_secret
+      - PENDING_PCACHE_RECREATION_INTERVAL=$$cap_pending_pcache_recreation_interval
+      - JOBS_INTERVAL=$$cap_jobs_interval
+      - LOGO_IMAGE=$$cap_logo_image
+      - LOGO_HIDELABEL=$$cap_logo_hidelabel
+      - BUILD_ASSETS=$$cap_build_assets
+      - SMTP_LOGIN=$$cap_smtp_login
+      - SMTP_PASSWORD=$$cap_smtp_password
+      - SMTP_HOST=$$cap_smtp_host
+      - SMTP_PORT=$$cap_smtp_port
+      - AUTH_SALT=$$cap_auth_salt
+      - AUTH_GOOGLE_CLIENT_ID=$$cap_google_client_id
+      - AUTH_GOOGLE_CLIENT_SECRET=$$cap_google_client_secret
+      - REDIS_CACHE=redis
+      - SESSIONS_SAVE_PATH=tcp://sessions:6379
+    depends_on:
+      - db
+      - redis
+      - sessions
+    command: ["sh", "-c", "nginx && php-fpm"]
+    volumes:
+      - $$cap_appname-mapa-assets:/var/www/html/assets
+      - $$cap_appname-mapa-public-files:/var/www/html/files
+      - $$cap_appname-mapa-private-files:/var/www/var/private-files
+      - $$cap_appname-mapa-saas-files:/var/www/var/saas-files
+      - sessions-data:/var/www/var/sessions
+      - $$cap_appname-mapa-logs:/var/www/var/logs
+
+  redis:
+    image: redis:6
+    command: --maxmemory 1256Mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+
+  sessions:
+    image: redis:6
+    command: --maxmemory 384Mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    volumes:
+      - sessions-data:/data
+
+  db:
+    image: efcjunior/mapasculturais-postgis:mapasculturais-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: $$cap_postgres_password
+      POSTGRES_USER: $$cap_postgres_user
+      POSTGRES_DB: $$cap_postgres_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  sessions-data:
+  db-data:
+  $$cap_appname-mapa-assets:
+  $$cap_appname-mapa-public-files:
+  $$cap_appname-mapa-private-files:
+  $$cap_appname-mapa-saas-files:
+  $$cap_appname-mapa-logs:
