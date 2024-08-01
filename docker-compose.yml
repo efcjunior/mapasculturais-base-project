@@ -1,94 +1,45 @@
+version: '3.8'
+
 services:
-  nginx:
-    image: nginx:1.27-alpine3.19
-    restart: unless-stopped
-    volumes:
-      - /dev/null:/var/www/html/index.php
-      - ./docker-data/public-files:/var/www/html/files
-      - ./docker-data/assets:/var/www/html/assets
-
-  ##### versão sem ssl
-      - ./docker/production/nginx.conf:/etc/nginx/conf.d/default.conf
-
-  ##### versão com ssl
-    #  - ./docker/production/nginx-ssl.conf:/etc/nginx/conf.d/default.conf
-    #  - ./docker-data/certs/conf:/etc/letsencrypt
-    #  - ./docker-data/certs/www:/var/www/certbot
-    ports:
-     - "80:80"
-     - "443:443"
-    depends_on:
-      - mapasculturais
-    links:
-      - mapasculturais
-  
   mapasculturais:
-    env_file:
-      - .env
-    build:
-      context: ./
-      dockerfile: docker/Dockerfile    
+    image: efcjunior/mapasculturais:prefeitura-triunfo
     restart: unless-stopped
-    volumes:
-      - ./.env:/.env
-      - ./docker-data/assets:/var/www/html/assets
-      - ./docker-data/public-files:/var/www/html/files
-      - ./docker-data/private-files:/var/www/var/private-files
-      - ./docker-data/saas-files:/var/www/var/saas-files
-      - ./docker-data/sessions:/var/www/var/sessions
-      - ./docker-data/logs:/var/www/var/logs
-
-      - ./docker/production/config.d:/var/www/config/prod.d
-
-      # Adicione os volumes para themes e plugins
-      - ./themes/CustomThemeBaseV2:/var/www/src/themes/CustomThemeBaseV2
-      - ./plugins/SamplePlugin:/var/www/src/plugins/SamplePlugin
-      - ./plugins/MultipleLocalAuth:/var/www/src/plugins/MultipleLocalAuth
-    #entrypoint: ["/entrypoint.sh"]
-    #command: ["php-fpm"]
-    links:
-      - db
-      - redis
-      - sessions
+    ports:
+      - "80:80"
+      - "443:443"
     environment:
       - REDIS_CACHE=redis
       - SESSIONS_SAVE_PATH=tcp://sessions:6379
-
     depends_on:
       - db
       - redis
       - sessions
+    command: ["sh", "-c", "nginx && php-fpm"]
+    volumes:
+      - sessions-data:/var/www/var/sessions
 
   redis:
     image: redis:6
     command: --maxmemory 1256Mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
- 
+
   sessions:
     image: redis:6
     command: --maxmemory 384Mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
     volumes:
-      - ./docker-data/sessions:/data
+      - sessions-data:/data
 
   db:
-    image: postgis/postgis:14-master
+    image: efcjunior/mapasculturais-postgis:mapasculturais-postgis
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=mapas
       - POSTGRES_USER=mapas
       - POSTGRES_DB=mapas
     volumes:
-      - ./docker/db:/docker-entrypoint-initdb.d
-      - ./docker-data/db-data:/var/lib/postgresql/data
-    
+      - db-data:/var/lib/postgresql/data
 
-## Em ambiente de homologação pode ser uma boa ideia utilizar o mailhog para testar 
-## o envio de emails e também prevenir que emails de tete sejam disparados acidentalmente 
-## para os usuários no caso de o ambiente de homologação utilizar um banco de dados cópia
-## de produção
-
-  # mailhog: 
-  #   image: mailhog/mailhog
-  #   ports:
-  #     - "8025:8025"
+volumes:
+  sessions-data:
+  db-data:
