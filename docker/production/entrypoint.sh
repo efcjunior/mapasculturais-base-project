@@ -1,8 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
-# Criar diretórios, se não existirem
-mkdir -p /var/www/html/assets /var/www/html/files /var/www/var/private-files /var/www/var/saas-files /var/www/var/sessions /var/www/var/logs
+# Crie os diretórios necessários e defina as permissões corretas
+mkdir -p /var/www/public/assets/js /var/www/public/assets/css /var/www/public/assets/img /var/www/public/assets/svg /var/www/var/sessions
+chown -R www-data:www-data /var/www/html /var/www/public/assets /var/www/var/sessions
+chmod -R 755 /var/www/html /var/www/public/assets /var/www/var/sessions
 
-chown -R www-data:www-data /var/www/html/assets /var/www/html/files /var/www/var/private-files /var/www/var/saas-files /var/www/var/sessions /var/www/var/logs
-chmod -R 775 /var/www/html/assets /var/www/html/files /var/www/var/private-files /var/www/var/saas-files /var/www/var/sessions /var/www/var/logs
-exec "$@"
+# Inicie o PHP-FPM em segundo plano
+php-fpm
+
+# Inicie o Nginx
+#nginx -g "daemon off;"

@@ -1,22 +1,51 @@
-version: '3.8'
-
 services:
   mapasculturais:
     image: efcjunior/mapasculturais:prefeitura-triunfo
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
     environment:
       - REDIS_CACHE=redis
       - SESSIONS_SAVE_PATH=tcp://sessions:6379
+      - BASE_URL=http://localhost:8080/
+      - APP_MODE=production
+      - LOG_LEVEL=DEBUG
+      - LOG_ENABLED=true
+      - CEP_TOKEN=
+      - MAILER_TRANSPORT=
+      - MAILER_FROM=
+      - MAILER_ALWAYSTO=
+      - DB_HOST=srv-captain--db
+      - DB_NAME=mapas
+      - DB_USER=mapas
+      - DB_PASS=mapas
+      - DB_VERSION=14
+      - GOOGLE_RECAPTCHA_SITEKEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+      - GOOGLE_RECAPTCHA_SECRET=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+      - AUTH_GOOGLE_CLIENT_ID=
+      - AUTH_GOOGLE_CLIENT_SECRET=
+      - AUTH_GOOGLE_SCOPE=
+      - AUTH_GOOGLE_REDIRECT_ID=
+      - PENDING_PCACHE_RECREATION_INTERVAL=1
+      - JOBS_INTERVAL=1
     depends_on:
       - db
       - redis
       - sessions
-    command: ["sh", "-c", "nginx && php-fpm"]
     volumes:
       - sessions-data:/var/www/var/sessions
+      - files:/var/www/html/files
+      - assets:/var/www/html/assets
+
+  nginx:
+    image: efcjunior/mapasculturais:mapasculturais-nginx
+    restart: unless-stopped
+    depends_on:
+      - mapasculturais
+    ports:
+      - "8080:80"
+    volumes:
+      - files:/var/www/html/files
+      - assets:/var/www/html/assets
+      - /dev/null:/var/www/html/index.php  # Substitui index.php por /dev/null
 
   redis:
     image: redis:6
@@ -43,3 +72,5 @@ services:
 volumes:
   sessions-data:
   db-data:
+  files:
+  assets:

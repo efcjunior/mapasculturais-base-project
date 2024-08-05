@@ -1,18 +1,38 @@
 FROM hacklab/mapasculturais:latest
 
-# Instale o Nginx
-RUN apt-get update && apt-get install -y nginx && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Defina variáveis de ambiente (opcional, dependendo do seu código PHP)
+ENV BASE_URL=http://localhost:8080/
 
-# Copie a configuração do Nginx
-COPY docker/production/nginx.conf /etc/nginx/conf.d/default.conf
+ENV APP_MODE=production
+ENV LOG_LEVEL=DEBUG
+ENV LOG_ENABLED=true
 
-# Copie o arquivo .env para dentro do container
-COPY .env /var/www/.env
+ENV CEP_TOKEN=
 
-# Carregar as variáveis de ambiente
-RUN echo "source /var/www/.env" >> /etc/profile
+ENV MAILER_TRANSPORT=
+ENV MAILER_FROM=
+
+# Usado para redirecionar todos os e-mails da plataforma para um email fixo, 
+# evitand envio de emails para os usuários
+ENV MAILER_ALWAYSTO=
+
+ENV DB_HOST=srv-captain--db
+ENV DB_NAME=mapas
+ENV DB_USER=mapas
+ENV DB_PASS=mapas
+ENV DB_VERSION=14
+
+# as chaves abaixo são de desenvolvimento, precisam ser substituidas em ambiente de produção
+ENV GOOGLE_RECAPTCHA_SITEKEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+ENV GOOGLE_RECAPTCHA_SECRET=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+
+ENV AUTH_GOOGLE_CLIENT_ID=
+ENV AUTH_GOOGLE_CLIENT_SECRET=
+ENV AUTH_GOOGLE_SCOPE=
+ENV AUTH_GOOGLE_REDIRECT_ID=
+
+ENV PENDING_PCACHE_RECREATION_INTERVAL=1
+ENV JOBS_INTERVAL=1
 
 # Copie temas e plugins para a aplicação
 COPY themes /var/www/src/themes
@@ -29,14 +49,9 @@ WORKDIR /var/www
 COPY docker/common/config.d /var/www/config/common.d
 COPY docker/production/config.d /var/www/config/config.d
 
-# Crie os diretórios necessários e defina as permissões corretas
-RUN mkdir -p /var/www/public/assets/js /var/www/public/assets/css /var/www/public/assets/img /var/www/public/assets/svg \
-    && chown -R www-data:www-data /var/www/html /var/www/public/assets \
-    && chmod -R 775 /var/www/html /var/www/public/assets
+# Copie o script de entrada
+COPY docker/production/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Exponha as portas para o Nginx
-EXPOSE 80
-EXPOSE 443
-
-# Defina o comando de inicialização para rodar Nginx e PHP-FPM juntos
-CMD ["sh", "-c", "source /var/www/.env && service nginx start && php-fpm"]
+# Use o script de entrada como ponto de entrada do container
+CMD ["/entrypoint.sh"]
