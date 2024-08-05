@@ -1,80 +1,211 @@
-version: '3.8'
-
+captainVersion: 4
 services:
-  mapasculturais:
-    image: efcjunior/mapasculturais:prefeitura-triunfo
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - APP_MODE=$$cap_app_mode
-      - LOG_LEVEL=$$cap_log_level
-      - LOG_ENABLED=$$cap_log_enabled
-      - CEP_TOKEN=$$cap_cep_token
-      - MAILER_TRANSPORT=$$cap_mailer_transport
-      - MAILER_FROM=$$cap_mailer_from
-      - MAILER_ALWAYSTO=$$cap_mailer_alwaysto
-      - DB_HOST=db
-      - DB_NAME=$$cap_postgres_db
-      - DB_USER=$$cap_postgres_user
-      - DB_PASS=$$cap_postgres_password
-      - GOOGLE_RECAPTCHA_SITEKEY=$$cap_google_recaptcha_sitekey
-      - GOOGLE_RECAPTCHA_SECRET=$$cap_google_recaptcha_secret
-      - PENDING_PCACHE_RECREATION_INTERVAL=$$cap_pending_pcache_recreation_interval
-      - JOBS_INTERVAL=$$cap_jobs_interval
-      - LOGO_IMAGE=$$cap_logo_image
-      - LOGO_HIDELABEL=$$cap_logo_hidelabel
-      - BUILD_ASSETS=$$cap_build_assets
-      - SMTP_LOGIN=$$cap_smtp_login
-      - SMTP_PASSWORD=$$cap_smtp_password
-      - SMTP_HOST=$$cap_smtp_host
-      - SMTP_PORT=$$cap_smtp_port
-      - AUTH_SALT=$$cap_auth_salt
-      - AUTH_GOOGLE_CLIENT_ID=$$cap_google_client_id
-      - AUTH_GOOGLE_CLIENT_SECRET=$$cap_google_client_secret
-      - REDIS_CACHE=redis
-      - SESSIONS_SAVE_PATH=tcp://sessions:6379
-    depends_on:
-      - db
-      - redis
-      - sessions
-    command: ["sh", "-c", "nginx && php-fpm"]
-    volumes:
-      - $$cap_appname-mapa-assets:/var/www/html/assets
-      - $$cap_appname-mapa-public-files:/var/www/html/files
-      - $$cap_appname-mapa-private-files:/var/www/var/private-files
-      - $$cap_appname-mapa-saas-files:/var/www/var/saas-files
-      - sessions-data:/var/www/var/sessions
-      - $$cap_appname-mapa-logs:/var/www/var/logs
+    $$cap_appname-mapa-mapasculturais:
+        image: efcjunior/mapasculturais:$$cap_mapasculturais_tag
+        restart: unless-stopped
+        environment:
+            REDIS_CACHE: redis
+            SESSIONS_SAVE_PATH: tcp://sessions:6379
+            BASE_URL: http://localhost:8080/
+            APP_MODE: $$cap_app_mode
+            LOG_LEVEL: $$cap_log_level
+            LOG_ENABLED: $$cap_log_enabled
+            CEP_TOKEN: $$cap_cep_token
+            MAILER_TRANSPORT: $$cap_mailer_transport
+            MAILER_FROM: $$cap_mailer_from
+            MAILER_ALWAYSTO: $$cap_mailer_alwaysto
+            DB_HOST: srv-captain--$$cap_appname-mapa-db
+            DB_NAME: $$cap_postgres_db
+            DB_USER: $$cap_postgres_user
+            DB_PASS: $$cap_postgres_password
+            DB_VERSION: 14
+            GOOGLE_RECAPTCHA_SITEKEY: $$cap_google_recaptcha_sitekey
+            GOOGLE_RECAPTCHA_SECRET: $$cap_google_recaptcha_secret
+            AUTH_GOOGLE_CLIENT_ID: $$cap_google_client_id
+            AUTH_GOOGLE_CLIENT_SECRET: $$cap_google_client_secret
+            AUTH_GOOGLE_SCOPE: $$cap_auth_google_scope
+            AUTH_GOOGLE_REDIRECT_ID: $$cap_auth_google_redirect_id
+            PENDING_PCACHE_RECREATION_INTERVAL: $$cap_pending_pcache_recreation_interval
+            JOBS_INTERVAL: $$cap_jobs_interval
+        depends_on:
+            - $$cap_appname-mapa-db
+            - $$cap_appname-mapa-redis
+            - $$cap_appname-mapa-sessions
+        volumes:
+            - $$cap_appname-mapa-sessions:/var/www/var/sessions
+            - $$cap_appname-mapa-files:/var/www/html/files
+            - $$cap_appname-mapa-assets:/var/www/html/assets
 
-  redis:
-    image: redis:6
-    command: --maxmemory 1256Mb --maxmemory-policy allkeys-lru
-    restart: unless-stopped
+    $$cap_appname-mapa-nginx:
+        image: efcjunior/mapasculturais:mapasculturais-nginx
+        restart: unless-stopped
+        depends_on:
+            - $$cap_appname-mapa-mapasculturais
+        ports:
+            - '8080:80'
+        volumes:
+            - $$cap_appname-mapa-files:/var/www/html/files
+            - $$cap_appname-mapa-assets:/var/www/html/assets
+            - /dev/null:/var/www/html/index.php # Substitui index.php por /dev/null
 
-  sessions:
-    image: redis:6
-    command: --maxmemory 384Mb --maxmemory-policy allkeys-lru
-    restart: unless-stopped
-    volumes:
-      - sessions-data:/data
+    $$cap_appname-mapa-redis:
+        image: redis:6
+        command: --maxmemory 1256Mb --maxmemory-policy allkeys-lru
+        restart: unless-stopped
 
-  db:
-    image: efcjunior/mapasculturais-postgis:mapasculturais-postgis
-    restart: unless-stopped
-    environment:
-      POSTGRES_PASSWORD: $$cap_postgres_password
-      POSTGRES_USER: $$cap_postgres_user
-      POSTGRES_DB: $$cap_postgres_db
-    volumes:
-      - db-data:/var/lib/postgresql/data
+    $$cap_appname-mapa-sessions:
+        image: redis:6
+        command: --maxmemory 384Mb --maxmemory-policy allkeys-lru
+        restart: unless-stopped
+        volumes:
+            - $$cap_appname-mapa-sessions:/data
+
+    $$cap_appname-mapa-db:
+        image: efcjunior/mapasculturais-postgis:mapasculturais-postgis
+        restart: unless-stopped
+        environment:
+            POSTGRES_PASSWORD: $$cap_postgres_password
+            POSTGRES_USER: $$cap_postgres_user
+            POSTGRES_DB: $$cap_postgres_db
+        volumes:
+            - $$cap_appname-mapa-db-data:/var/lib/postgresql/data
+        caproverExtra:
+            notExposeAsWebApp: 'true'
 
 volumes:
-  sessions-data:
-  db-data:
-  $$cap_appname-mapa-assets:
-  $$cap_appname-mapa-public-files:
-  $$cap_appname-mapa-private-files:
-  $$cap_appname-mapa-saas-files:
-  $$cap_appname-mapa-logs:
+    $$cap_appname-mapa-sessions:
+    $$cap_appname-mapa-db-data:
+    $$cap_appname-mapa-files:
+    $$cap_appname-mapa-assets:
+
+caproverOneClickApp:
+    variables:
+        - description: Versão do MAPA em https://hub.docker.com/r/efcjunior/mapasculturais/tags
+          defaultValue: prefeitura-
+          id: $$cap_mapasculturais_tag
+          label: Tag docker da versão
+          validRegex: /.{1,}/
+
+        - id: $$cap_postgres_password
+          label: PostgreSQL Password
+          defaultValue: $$cap_gen_random_hex(16)
+          description: 'A senha do usuário do banco de dados PostgreSQL.'
+          validRegex: /.{1,}/
+
+        - id: $$cap_postgres_user
+          label: PostgreSQL User
+          defaultValue: mapas
+          description: 'O usuário do banco de dados PostgreSQL.'
+          validRegex: /^([a-zA-Z0-9\-\.\_])+$/
+
+        - id: $$cap_postgres_db
+          label: PostgreSQL Database
+          defaultValue: mapas
+          description: 'O nome do banco de dados PostgreSQL.'
+          validRegex: /^([a-zA-Z0-9\-\.\_])+$/
+
+        - id: $$cap_base_url
+          label: Base URL
+          defaultValue: 'http://localhost:8080/'
+
+        - id: $$cap_app_mode
+          label: App Mode
+          defaultValue: production
+
+        - id: $$cap_log_level
+          label: Log Level
+          defaultValue: DEBUG
+
+        - id: $$cap_log_enabled
+          label: Log Enabled
+          defaultValue: 'true'
+
+        - id: $$cap_cep_token
+          label: CEP Token
+          defaultValue: ''
+
+        - id: $$cap_mailer_transport
+          label: Mailer Transport
+          defaultValue: smtp://localhost:25
+
+        - id: $$cap_mailer_from
+          label: Mailer From
+          defaultValue: suporte@meumapa.gov.br
+
+        - id: $$cap_mailer_alwaysto
+          label: Mailer Always To
+          defaultValue: ''
+
+        - id: $$cap_google_recaptcha_sitekey
+          label: Google Recaptcha Site Key
+          defaultValue: 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+
+        - id: $$cap_google_recaptcha_secret
+          label: Google Recaptcha Secret
+          defaultValue: 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+
+        - id: $$cap_pending_pcache_recreation_interval
+          label: Pending Pcache Recreation Interval
+          defaultValue: '1'
+
+        - id: $$cap_jobs_interval
+          label: Jobs Interval
+          defaultValue: '1'
+
+        - id: $$cap_logo_image
+          label: Logo Image
+          defaultValue: img/logo-mapas.png
+
+        - id: $$cap_logo_hidelabel
+          label: Logo Hide Label
+          defaultValue: 'true'
+
+        - id: $$cap_build_assets
+          label: Build Assets
+          defaultValue: '0'
+
+        - id: $$cap_smtp_login
+          label: SMTP Login
+          defaultValue: email@gmail.com
+
+        - id: $$cap_smtp_password
+          label: SMTP Password
+          defaultValue: $$cap_gen_random_hex(16)
+
+        - id: $$cap_smtp_host
+          label: SMTP Host
+          defaultValue: smtp.gmail.com
+
+        - id: $$cap_smtp_port
+          label: SMTP Port
+          defaultValue: '587'
+
+        - id: $$cap_auth_salt
+          label: Auth Salt
+          defaultValue: $$cap_gen_random_hex(36)
+
+        - id: $$cap_google_client_id
+          label: Auth Google Client ID
+          defaultValue: ''
+
+        - id: $$cap_google_client_secret
+          label: Auth Google Client Secret
+          defaultValue: $$cap_gen_random_hex(36)
+
+        - id: $$cap_auth_google_scope
+          label: Auth Google Scope
+          defaultValue: ''
+
+        - id: $$cap_auth_google_redirect_id
+          label: Auth Google Redirect ID
+          defaultValue: ''
+
+    instructions:
+        start: |-
+            Mapas Culturais é uma plataforma colaborativa que reúne informações sobre agentes, espaços, eventos e projetos culturais.
+        end: >
+            Mapas Culturais está implantado e disponível.
+    displayName: Mapas Culturais
+    isOfficial: false
+    description: Mapas Culturais é uma iniciativa cívica de criação de ferramentas de gestão cultural.
+    documentation: 'https://github.com/SoftagonSistemas/mapasculturais'
