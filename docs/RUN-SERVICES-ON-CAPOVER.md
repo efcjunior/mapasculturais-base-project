@@ -1,104 +1,98 @@
-Aqui está o guia do desenvolvedor atualizado sem a necessidade do Docker Compose:
+Aqui está um guia para preparar e subir o projeto Mapas Culturais no CapRover:
 
 ---
 
-## Guia do Desenvolvedor
+## Guia de Preparação e Deploy no CapRover
 
-### Pré-requisitos
-1. **Docker**: Certifique-se de que o Docker está instalado e funcionando corretamente na sua máquina.
-2. **Rede Docker**: Todos os containers devem rodar na mesma rede Docker para se comunicarem entre si.
+### 1. Clone do Projeto
 
-### Passos de Configuração
-
-#### 1. Criar a Rede Docker
-
-Para garantir que todos os containers possam se comunicar, crie uma rede Docker:
+Clone a branch específica do projeto:
 
 ```bash
-docker network create mcnet
+git clone -b cliente-triunfo-v1 https://github.com/efcjunior/mapasculturais-base-project.git
 ```
 
-#### 2. Executar os Containers na Ordem Correta
+### 2. Alteração dos Nomes dos Serviços e Volumes no Compose
 
-##### 2.1. PostGIS (Banco de Dados)
+Se você estiver fazendo a implantação usando a opção **TEMPLATE** do CapRover, siga as instruções abaixo:
 
-Inicie o container do PostGIS, que serve como o banco de dados:
+- Abra o arquivo `docker-compose.yml` na raiz do projeto.
+- Adicione o prefixo ao nome dos serviços e volumes conforme o nome do projeto no CapRover. Por exemplo:
+  - Altere `nginx` para `treina-triunfo-mapa-nginx`.
+  - Altere `mapasculturais` para `treina-triunfo-mapa-mapasculturais`.
+
+**Exemplo:**
+
+Antes:
+```yaml
+services:
+  nginx:
+    # configuração
+  mapasculturais:
+    # configuração
+volumes:
+  mapa-assets:
+  mapa-db-data:
+```
+
+Depois:
+```yaml
+services:
+  treina-triunfo-mapa-nginx:
+    # configuração
+  treina-triunfo-mapa-mapasculturais:
+    # configuração
+volumes:
+  treina-triunfo-mapa-assets:
+  treina-triunfo-mapa-db-data:
+```
+
+- Caso prefira usar outra opção que adiciona o prefixo automaticamente, remova os prefixos dos serviços e volumes para evitar duplicação.
+
+### 3. Configuração das Variáveis de Ambiente
+
+- Navegue até a pasta `docker` dentro da pasta raiz do projeto.
+- Abra o arquivo correspondente às variáveis de ambiente e faça as seguintes alterações:
+  - **`BASE_URL`**: Defina a URL base do serviço, que corresponde ao endereço do serviço Nginx implantado no CapRover.
+  - **`DB_HOST`**: Defina o nome do host do banco de dados, que deve corresponder ao endereço do serviço DB no CapRover.
+
+### 4. Configuração do Nginx
+
+- Navegue até o arquivo `docker/nginx/nginx.conf`.
+- Adicione o prefixo do serviço `mapasculturais` nos locais apropriados. Por exemplo:
+
+Antes:
+```
+proxy_pass http://mapasculturais:9000;
+```
+
+Depois:
+```
+proxy_pass http://srv-captain--treina-triunfo-mapa-mapasculturais:9000;
+```
+
+### 5. Construção das Imagens Docker
+
+Construa as imagens Docker do Nginx e do Mapas Culturais a partir da pasta raiz do projeto:
 
 ```bash
-docker run --rm --name=postgis \
---network=mcnet \
--e POSTGRES_PASSWORD=mapas \
--e POSTGRES_USER=mapas \
--e POSTGRES_DB=mapas \
--v $(pwd)/docker-data/db-data:/var/lib/postgresql/data \
-efcjunior/mapasculturais-postgis:mapasculturais-postgis
+docker build -t efcjunior/mapasculturais:mapasculturais-nginx -f docker/nginx/Dockerfile .
+docker build -t efcjunior/mapasculturais:prefeitura-triunfo -f docker/Dockerfile .
 ```
 
-##### 2.2. Redis (Cache)
+### 6. Publicação das Imagens no Docker Hub
 
-Inicie o container Redis:
+Publique as imagens construídas no Docker Hub:
 
 ```bash
-docker run --rm --name=redis \
---network=mcnet \
-redis:6
+docker push efcjunior/mapasculturais:mapasculturais-nginx
+docker push efcjunior/mapasculturais:prefeitura-triunfo
 ```
-
-##### 2.3. Sessions (Gerenciamento de Sessões Redis)
-
-Inicie o container responsável pelo gerenciamento de sessões:
-
-```bash
-docker run --rm --name=sessions \
---network=mcnet \
--v $(pwd)/docker-data/sessions:/data \
-redis:6
-```
-
-##### 2.4. MapasCulturais (Aplicação Principal)
-
-Inicie o container da aplicação Mapas Culturais:
-
-```bash
-docker run --rm --name=mapasculturais \
---network=mcnet \
--v $(pwd)/docker-data/assets:/var/www/html/assets \
--v $(pwd)/docker-data/public-files:/var/www/html/files \
--v $(pwd)/docker-data/private-files:/var/www/var/private-files \
--v $(pwd)/docker-data/saas-files:/var/www/var/saas-files \
--v $(pwd)/docker-data/sessions:/var/www/var/sessions \
--v $(pwd)/docker-data/logs:/var/www/var/logs \
--e REDIS_CACHE=redis \
--e SESSIONS_SAVE_PATH=tcp://sessions:6379 \
---env-file=$(pwd)/.env \
-efcjunior/mapasculturais:prefeitura-triunfo php-fpm
-```
-
-##### 2.5. Nginx (Servidor Web)
-
-Por fim, inicie o container do Nginx, que atuará como proxy reverso para a aplicação Mapas Culturais:
-
-```bash
-docker run --rm --name=nginx -p 80:80 \
---network=mcnet \
--v $(pwd)/nginx.conf:/etc/nginx/conf.d/default.conf \
--v $(pwd)/docker-data/assets:/var/www/html/assets \
--v $(pwd)/docker-data/public-files:/var/www/html/files \
--v /dev/null:/var/www/html/index.php \
-nginx:1.27-alpine3.19
-```
-
-### Configurações Necessárias
-
-#### 3. Configurar as Variáveis de Ambiente
-
-- Copie o arquivo `.env_sample` para `.env` na raiz do projeto.
-- Configure as variáveis de ambiente no arquivo `.env` conforme necessário.
-
-#### 4. Configurar o Nginx
-
-- O arquivo `nginx.conf` deve conter as configurações necessárias para o servidor Nginx, incluindo a configuração de proxy reverso e outros parâmetros, como limites de requisições e configurações de segurança.
 
 ---
 
-Seguindo estes passos, você terá a aplicação Mapas Culturais rodando em containers Docker, sem a necessidade de Docker Compose.
+### Considerações Finais
+
+Certifique-se de que todos os passos foram seguidos e que as variáveis de ambiente e URLs estão corretamente configuradas. O CapRover deve então ser capaz de implantar o projeto corretamente com base nas imagens Docker e configurações que você preparou.
+
+Se precisar de assistência adicional, sinta-se à vontade para pedir!

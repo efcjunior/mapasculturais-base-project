@@ -1,65 +1,44 @@
 services:
-  mapasculturais:
+  treina-triunfo-mapa-mapasculturais:
     image: efcjunior/mapasculturais:prefeitura-triunfo
     restart: unless-stopped
     environment:
       - REDIS_CACHE=redis
       - SESSIONS_SAVE_PATH=tcp://sessions:6379
-      - BASE_URL=http://localhost:8080/
-      - APP_MODE=production
-      - LOG_LEVEL=DEBUG
-      - LOG_ENABLED=true
-      - CEP_TOKEN=
-      - MAILER_TRANSPORT=
-      - MAILER_FROM=
-      - MAILER_ALWAYSTO=
-      - DB_HOST=srv-captain--db
-      - DB_NAME=mapas
-      - DB_USER=mapas
-      - DB_PASS=mapas
-      - DB_VERSION=14
-      - GOOGLE_RECAPTCHA_SITEKEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
-      - GOOGLE_RECAPTCHA_SECRET=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
-      - AUTH_GOOGLE_CLIENT_ID=
-      - AUTH_GOOGLE_CLIENT_SECRET=
-      - AUTH_GOOGLE_SCOPE=
-      - AUTH_GOOGLE_REDIRECT_ID=
-      - PENDING_PCACHE_RECREATION_INTERVAL=1
-      - JOBS_INTERVAL=1
     depends_on:
-      - db
-      - redis
-      - sessions
+      - treina-triunfo-mapa-db
+      - treina-triunfo-mapa-redis
+      - treina-triunfo-mapa-sessions
     volumes:
-      - sessions-data:/var/www/var/sessions
-      - files:/var/www/html/files
-      - assets:/var/www/html/assets
+      - treina-triunfo-mapa-sessions-data:/var/www/var/sessions
+      - treina-triunfo-mapa-files:/var/www/html/files
+      - treina-triunfo-mapa-assets:/var/www/html/assets
 
-  nginx:
+  treina-triunfo-mapa-nginx:
     image: efcjunior/mapasculturais:mapasculturais-nginx
     restart: unless-stopped
     depends_on:
-      - mapasculturais
+      - treina-triunfo-mapa-mapasculturais
     ports:
       - "8080:80"
     volumes:
-      - files:/var/www/html/files
-      - assets:/var/www/html/assets
+      - treina-triunfo-mapa-files:/var/www/html/files
+      - treina-triunfo-mapa-assets:/var/www/html/assets
       - /dev/null:/var/www/html/index.php  # Substitui index.php por /dev/null
 
-  redis:
+  treina-triunfo-mapa-redis:
     image: redis:6
     command: --maxmemory 1256Mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
 
-  sessions:
+  treina-triunfo-mapa-sessions:
     image: redis:6
     command: --maxmemory 384Mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
     volumes:
-      - sessions-data:/data
+      - treina-triunfo-mapa-sessions-data:/data
 
-  db:
+  treina-triunfo-mapa-db:
     image: efcjunior/mapasculturais-postgis:mapasculturais-postgis
     restart: unless-stopped
     environment:
@@ -67,10 +46,10 @@ services:
       - POSTGRES_USER=mapas
       - POSTGRES_DB=mapas
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - treina-triunfo-mapa-db-data:/var/lib/postgresql/data
 
 volumes:
-  sessions-data:
-  db-data:
-  files:
-  assets:
+  treina-triunfo-mapa-sessions-data:
+  treina-triunfo-mapa-db-data:
+  treina-triunfo-mapa-files:
+  treina-triunfo-mapa-assets:
