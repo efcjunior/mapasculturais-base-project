@@ -3,8 +3,8 @@ services:
     image: efcjunior/mapasculturais:prefeitura-triunfo
     restart: unless-stopped
     environment:
-      - REDIS_CACHE=redis
-      - SESSIONS_SAVE_PATH=tcp://sessions:6379
+      - REDIS_CACHE=treina-triunfo-mapa-redis
+      - SESSIONS_SAVE_PATH=tcp://treina-triunfo-mapa-sessions:6379
     depends_on:
       - treina-triunfo-mapa-db
       - treina-triunfo-mapa-redis

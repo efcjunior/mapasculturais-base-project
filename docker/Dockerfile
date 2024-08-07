@@ -1,7 +1,7 @@
 FROM hacklab/mapasculturais:latest
 
 # Defina variáveis de ambiente (opcional, dependendo do seu código PHP)
-ENV BASE_URL=http://treina-triunfo-mapa-nginx.sirius.softagon.io/
+#ENV BASE_URL=http://localhost:8080/
 
 ENV APP_MODE=production
 ENV LOG_LEVEL=DEBUG
@@ -16,7 +16,7 @@ ENV MAILER_FROM=
 # evitand envio de emails para os usuários
 ENV MAILER_ALWAYSTO=
 
-ENV DB_HOST=srv-captain--treina-triunfo-mapa-db
+ENV DB_HOST=treina-triunfo-mapa-db
 ENV DB_NAME=mapas
 ENV DB_USER=mapas
 ENV DB_PASS=mapas
