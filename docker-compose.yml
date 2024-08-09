@@ -1,44 +1,44 @@
 services:
-  treina-triunfo-mapa-mapasculturais:
+  everson-mapasculturais:
     image: efcjunior/mapasculturais:prefeitura-triunfo
     restart: unless-stopped
     environment:
-      - REDIS_CACHE=treina-triunfo-mapa-redis
-      - SESSIONS_SAVE_PATH=tcp://treina-triunfo-mapa-sessions:6379
+      - REDIS_CACHE=everson-redis
+      - SESSIONS_SAVE_PATH=tcp://everson-sessions:6379
     depends_on:
-      - treina-triunfo-mapa-db
-      - treina-triunfo-mapa-redis
-      - treina-triunfo-mapa-sessions
+      - everson-db
+      - everson-redis
+      - everson-sessions
     volumes:
-      - treina-triunfo-mapa-sessions-data:/var/www/var/sessions
-      - treina-triunfo-mapa-files:/var/www/html/files
-      - treina-triunfo-mapa-assets:/var/www/html/assets
+      - everson-sessions-data:/var/www/var/sessions
+      - everson-files:/var/www/html/files
+      - everson-assets:/var/www/html/assets
 
-  treina-triunfo-mapa-nginx:
+  everson-nginx:
     image: efcjunior/mapasculturais:mapasculturais-nginx
     restart: unless-stopped
     depends_on:
-      - treina-triunfo-mapa-mapasculturais
+      - everson-mapasculturais
     ports:
       - "8080:80"
     volumes:
-      - treina-triunfo-mapa-files:/var/www/html/files
-      - treina-triunfo-mapa-assets:/var/www/html/assets
+      - everson-files:/var/www/html/files
+      - everson-assets:/var/www/html/assets
       - /dev/null:/var/www/html/index.php  # Substitui index.php por /dev/null
 
-  treina-triunfo-mapa-redis:
+  everson-redis:
     image: redis:6
     command: --maxmemory 1256Mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
 
-  treina-triunfo-mapa-sessions:
+  everson-sessions:
     image: redis:6
     command: --maxmemory 384Mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
     volumes:
-      - treina-triunfo-mapa-sessions-data:/data
+      - everson-sessions-data:/data
 
-  treina-triunfo-mapa-db:
+  everson-db:
     image: efcjunior/mapasculturais-postgis:mapasculturais-postgis
     restart: unless-stopped
     environment:
@@ -46,10 +46,10 @@ services:
       - POSTGRES_USER=mapas
       - POSTGRES_DB=mapas
     volumes:
-      - treina-triunfo-mapa-db-data:/var/lib/postgresql/data
+      - everson-db-data:/var/lib/postgresql/data
 
 volumes:
-  treina-triunfo-mapa-sessions-data:
-  treina-triunfo-mapa-db-data:
-  treina-triunfo-mapa-files:
-  treina-triunfo-mapa-assets:
+  everson-sessions-data:
+  everson-db-data:
+  everson-files:
+  everson-assets:

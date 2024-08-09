@@ -16,7 +16,7 @@ ENV MAILER_FROM=
 # evitand envio de emails para os usuários
 ENV MAILER_ALWAYSTO=
 
-ENV DB_HOST=treina-triunfo-mapa-db
+ENV DB_HOST=srv-captain--everson-db
 ENV DB_NAME=mapas
 ENV DB_USER=mapas
 ENV DB_PASS=mapas
